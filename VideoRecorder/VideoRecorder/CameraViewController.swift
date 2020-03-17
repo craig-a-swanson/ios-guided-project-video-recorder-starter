@@ -58,6 +58,7 @@ class CameraViewController: UIViewController {
 
     private func setupCamera() {
         let camera = bestcamera()
+        let microphone = bestMicrophone()
         
         captureSession.beginConfiguration()
         
@@ -71,10 +72,16 @@ class CameraViewController: UIViewController {
         }
         
         captureSession.addInput(cameraInput)
+        
+        guard let microphoneInput = try? AVCaptureDeviceInput(device: microphone) else {
+            preconditionFailure("Can't create an input from microphone")
+        }
+        captureSession.addInput(microphoneInput)
+        
         if captureSession.canSetSessionPreset(.hd1920x1080) {
             captureSession.sessionPreset = .hd1920x1080
         }
-        
+
         guard captureSession.canAddOutput(fileOutput) else {
             preconditionFailure("Cannot write to disk.")
         }
@@ -92,6 +99,13 @@ class CameraViewController: UIViewController {
             return device
         }
         preconditionFailure("No cameras on device match the specs that we need.")
+    }
+    
+    private func bestMicrophone() -> AVCaptureDevice {
+        if let device = AVCaptureDevice.default(for: .audio) {
+            return device
+        }
+        preconditionFailure("No microphones on device match the specs that we need.")
     }
 
     @IBAction func recordButtonPressed(_ sender: Any) {
