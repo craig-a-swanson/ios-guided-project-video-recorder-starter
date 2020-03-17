@@ -27,7 +27,16 @@ class CameraViewController: UIViewController {
 		cameraView.videoPlayerLayer.videoGravity = .resizeAspectFill
         
         setupCamera()
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
+        view.addGestureRecognizer(tapGesture)
 	}
+    
+    @objc func handleTapGesture(_ tapGesture: UITapGestureRecognizer) {
+        if tapGesture.state == .ended {
+            playRecording()
+        }
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -54,6 +63,13 @@ class CameraViewController: UIViewController {
         view.layer.addSublayer(playerLayer)
         
         player.play()
+    }
+    
+    func playRecording() {
+        if let player = player {
+            player.seek(to: CMTime.zero)
+            player.play()
+        }
     }
 
     private func setupCamera() {
