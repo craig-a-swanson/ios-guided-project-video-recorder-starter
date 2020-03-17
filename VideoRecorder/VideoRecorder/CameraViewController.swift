@@ -14,6 +14,8 @@ class CameraViewController: UIViewController {
     lazy private var captureSession = AVCaptureSession()
     lazy private var fileOutput = AVCaptureMovieFileOutput()
     
+    var player: AVPlayer!
+    
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var cameraView: CameraPreviewView!
 
@@ -36,6 +38,22 @@ class CameraViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         captureSession.stopRunning()
+    }
+    
+    func playMovie(url: URL) {
+        player = AVPlayer(url: url)
+        
+        let playerLayer = AVPlayerLayer(player: player)
+        
+        var topRect = view.bounds
+        topRect.size.height /= 4
+        topRect.size.width /= 4
+        topRect.origin.y = view.layoutMargins.top
+        
+        playerLayer.frame = topRect
+        view.layer.addSublayer(playerLayer)
+        
+        player.play()
     }
 
     private func setupCamera() {
@@ -116,5 +134,6 @@ extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
         
         print("Video URL: \(outputFileURL)")
         updateViews()
+        playMovie(url: outputFileURL)
     }
 }
