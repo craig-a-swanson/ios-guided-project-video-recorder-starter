@@ -16,6 +16,7 @@ class ViewController: UIViewController {
 		// Do any additional setup after loading the view.
 	}
 	
+    // run in viewDidAppear because we have to wait until the view is onscreen in order to transition to the camera.
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         

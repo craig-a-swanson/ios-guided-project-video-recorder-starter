@@ -11,15 +11,19 @@ import AVFoundation
 
 class CameraViewController: UIViewController {
 
+    // Might be better to do this in an initializer
     lazy private var captureSession = AVCaptureSession()
+    
+    // Add movie output (.mov)
     lazy private var fileOutput = AVCaptureMovieFileOutput()
     
+    // Add a player to show the video on screen
     var player: AVPlayer!
     
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var cameraView: CameraPreviewView!
 
-
+    // MARK: - View Controller Life Cycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -32,12 +36,6 @@ class CameraViewController: UIViewController {
         view.addGestureRecognizer(tapGesture)
 	}
     
-    @objc func handleTapGesture(_ tapGesture: UITapGestureRecognizer) {
-        if tapGesture.state == .ended {
-            playRecording()
-        }
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -47,6 +45,15 @@ class CameraViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         captureSession.stopRunning()
+    }
+    
+    @objc func handleTapGesture(_ tapGesture: UITapGestureRecognizer) {
+        switch(tapGesture.state) {
+        case .ended:
+            playRecording()
+        default:
+            print("Handled other tap states: \(tapGesture.state)")
+        }
     }
     
     func playMovie(url: URL) {
@@ -67,15 +74,19 @@ class CameraViewController: UIViewController {
     
     func playRecording() {
         if let player = player {
+            // Go to start of video (CMTime zero)
             player.seek(to: CMTime.zero)
+            // CMTime(second: 2, preferredTimescale: 30) // 30 frames per second
             player.play()
         }
     }
 
+    // MARK: - Set up Camera
     private func setupCamera() {
         let camera = bestcamera()
         let microphone = bestMicrophone()
         
+        // there is a "begin" to start and a "commit" to end.
         captureSession.beginConfiguration()
         
         guard let cameraInput = try? AVCaptureDeviceInput(device: camera) else {
@@ -94,10 +105,12 @@ class CameraViewController: UIViewController {
         }
         captureSession.addInput(microphoneInput)
         
+        // If the file is large, change the resolution quality to make it smaller
         if captureSession.canSetSessionPreset(.hd1920x1080) {
             captureSession.sessionPreset = .hd1920x1080
         }
 
+        // Add output
         guard captureSession.canAddOutput(fileOutput) else {
             preconditionFailure("Cannot write to disk.")
         }
@@ -107,10 +120,13 @@ class CameraViewController: UIViewController {
         cameraView.session = captureSession
     }
     
+    // MARK: - Best Camera and Microphone
     private func bestcamera() -> AVCaptureDevice {
+        // try the better camera first if the user has it
         if let device = AVCaptureDevice.default(.builtInUltraWideCamera, for: .video, position: .back) {
         return device
         }
+        // if the user doesn't have the better one, use the standard camera
         if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
             return device
         }
@@ -124,6 +140,7 @@ class CameraViewController: UIViewController {
         preconditionFailure("No microphones on device match the specs that we need.")
     }
 
+    // MARK: - Record Action
     @IBAction func recordButtonPressed(_ sender: Any) {
         toggleRecording()
 	}
@@ -136,6 +153,7 @@ class CameraViewController: UIViewController {
         }
     }
 	
+    // MARK: - Create URL
 	/// Creates a new file URL in the documents directory
 	private func newRecordingURL() -> URL {
 		let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -153,6 +171,7 @@ class CameraViewController: UIViewController {
     }
 }
 
+// MARK: - AVCaptureFileOutputRecording Delegate
 extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
     func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
         updateViews()
@@ -162,7 +181,7 @@ extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
             print("Error saving video: \(error)")
         }
         
-        print("Video URL: \(outputFileURL)")
+//        print("Video URL: \(outputFileURL)")
         updateViews()
         playMovie(url: outputFileURL)
     }

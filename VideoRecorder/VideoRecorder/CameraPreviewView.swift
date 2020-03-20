@@ -11,6 +11,8 @@ import AVFoundation
 
 class CameraPreviewView: UIView {
     
+    // defaults to the CALayer class but we can override
+    // this layer can display it effectively
     override class var layerClass: AnyClass {
         return AVCaptureVideoPreviewLayer.self
     }
